@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import { FaBookOpen } from "react-icons/fa";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const BookingForm = () => {
@@ -68,7 +67,6 @@ const BookingForm = () => {
 
   return (
     <div className="pt-24 min-h-screen bg-gray-900 p-4 flex flex-col items-center justify-center">
-      <ToastContainer position="top-center" theme="dark" />
       <div className="bg-gray-800 p-8 rounded-xl shadow-2xl w-full max-w-md border border-gray-700">
         <h2 className="text-2xl font-bold mb-6 text-white text-center">
           Booking Form
