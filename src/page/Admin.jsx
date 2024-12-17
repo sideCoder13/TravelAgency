@@ -39,9 +39,6 @@ const AdminDashboard = () => {
         setBookings(res1.data.data)
         setPackages(res2.data.data)
 
-        console.log(res1.data.data);
-        console.log(res2.data.data)
-
       }catch(err){
         console.log(err);
       }
