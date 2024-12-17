@@ -17,6 +17,7 @@ const Homepage = () => {
   useEffect(()=>{
     const fetchData = async () => {
       try{
+        console.log(`${process.env.REACT_APP_BACKEND_URL}/packages`);
         const data = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/packages`)
         if(!data){
           console.log("no data")
