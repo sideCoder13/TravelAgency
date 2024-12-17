@@ -33,6 +33,10 @@ And you are reday to use the application!
    9. Downloadable invoice PDF
    10. JWT Tokens for Admin authentication
   
+   Admin Credentials-
+   Username- admin
+   Password- admin123
+  
    Technical Stack:
    1. Frontend: React.js
    2. Backend: Node.js and Express.js
