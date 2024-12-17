@@ -16,7 +16,7 @@ router.post("/admin/login",adminLogin)
 router.post("/admin/packages",verifyToken,postAdminPackages)
 router.put("/admin/packages/:id",verifyToken,getAdminPackagesbyID)
 router.delete("/admin/packages/:id",verifyToken,deletePackage)
-router.get("/admin/users",verifyToken,getAllUser)
+router.get("/admin/users",getAllUser)
 
 
 

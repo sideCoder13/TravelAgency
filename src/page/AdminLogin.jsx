@@ -1,9 +1,16 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { FaUserShield } from "react-icons/fa";
 import { RiLockPasswordLine } from "react-icons/ri";
 import { toast } from "react-toastify";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { AppContext } from "../context/context";
 
 const AdminLogin = () => {
+
+  const {setToken} = useContext(AppContext);
+
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: "",
     password: ""
@@ -39,8 +46,21 @@ const AdminLogin = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validateForm()) {
-      toast("Form Submited")
+
       console.log("Form submitted:", formData);
+      const url = `${process.env.REACT_APP_BACKEND_URL}/admin/login`
+      axios.post(url,formData)
+      .then((response) => {
+        console.log(response);
+        localStorage.setItem("token",response.data.token)
+        setToken(response.data.token)
+        toast.success("Admin Login successful");
+        navigate("/admin")
+      })
+      .catch((err)=>{
+        toast.error("Admin Login Failed")
+        console.log(err)
+      })
       setFormData({ username: "", password: "" });
     }
   };

@@ -1,20 +1,28 @@
 import React, { useState } from "react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import axios from 'axios'
+import { useNavigate, useParams } from "react-router-dom";
 
 const BookingForm = () => {
+
+  const navigate = useNavigate()
+
+  const id = useParams().id;
+
   const [formData, setFormData] = useState({
-    name: "",
+    Name: "",
     email: "",
     phone: "",
-    travelers: "",
-    specialRequests: ""
+    NoOfTravellers: "",
+    specialRequest: "",
+    id:id
   });
   const [errors, setErrors] = useState({});
 
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.name.trim()) newErrors.name = "Name is required";
+    if (!formData.Name.trim()) newErrors.Name = "Name is required";
     if (!formData.email.trim()) {
       newErrors.email = "Email is required";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
@@ -25,10 +33,10 @@ const BookingForm = () => {
     } else if (!/^\d{10}$/.test(formData.phone.replace(/\D/g, ""))) {
       newErrors.phone = "Invalid phone number";
     }
-    if (!formData.travelers) {
-      newErrors.travelers = "Number of travelers is required";
-    } else if (formData.travelers < 1) {
-      newErrors.travelers = "At least 1 traveler is required";
+    if (!formData.NoOfTravellers) {
+      newErrors.NoOfTravellers = "Number of travelers is required";
+    } else if (formData.NoOfTravellers < 1) {
+      newErrors.NoOfTravellers = "At least 1 traveler is required";
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -48,17 +56,29 @@ const BookingForm = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (validateForm()) {
       console.log("Form submitted:", formData);
-      toast.success("Booking submitted successfully!");
+      const url = `${process.env.REACT_APP_BACKEND_URL}/bookings`
+      axios.post(url,formData)
+      .then((response) => {
+        console.log(response.data.data)
+        const userId = response.data.data._id
+        toast.success("Booking submitted successfully!");
+        navigate(`/invoice/${userId}`)
+      })
+      .catch((err)=>{
+        toast.error("Booking Not Successfull")
+        console.log(err)
+      })
+
       setFormData({
-        name: "",
+        Name: "",
         email: "",
         phone: "",
-        travelers: "",
-        specialRequests: ""
+        NoOfTravellers: "",
+        specialRequest: ""
       });
     } else {
       toast.error("Please fill in all required fields correctly");
@@ -79,8 +99,8 @@ const BookingForm = () => {
             <input
               type="text"
               id="name"
-              name="name"
-              value={formData.name}
+              name="Name"
+              value={formData.Name}
               onChange={handleChange}
               className={`w-full p-3 rounded-lg focus:outline-none focus:ring-2 bg-gray-700 text-white ${errors.name ? "border-red-500 focus:ring-red-400" : "border-gray-600 focus:ring-blue-400"}`}
               placeholder="Enter your name"
@@ -133,15 +153,15 @@ const BookingForm = () => {
             <input
               type="number"
               id="travelers"
-              name="travelers"
-              value={formData.travelers}
+              name="NoOfTravellers"
+              value={formData.NoOfTravellers}
               onChange={handleChange}
               min="1"
               className={`w-full p-3 rounded-lg focus:outline-none focus:ring-2 bg-gray-700 text-white ${errors.travelers ? "border-red-500 focus:ring-red-400" : "border-gray-600 focus:ring-blue-400"}`}
               placeholder="Enter number of travelers"
             />
-            {errors.travelers && (
-              <p className="text-red-400 text-sm mt-1">{errors.travelers}</p>
+            {errors.NoOfTravellers && (
+              <p className="text-red-400 text-sm mt-1">{errors.NoOfTravellers}</p>
             )}
           </div>
 
@@ -151,8 +171,8 @@ const BookingForm = () => {
             </label>
             <textarea
               id="specialRequests"
-              name="specialRequests"
-              value={formData.specialRequests}
+              name="specialRequest"
+              value={formData.specialRequest}
               onChange={handleChange}
               className="w-full p-3 rounded-lg focus:outline-none focus:ring-2 bg-gray-700 text-white border-gray-600 focus:ring-blue-400"
               rows="4"

@@ -5,7 +5,7 @@ require('dotenv').config();
 
 exports.getPackages = async (req,res)=>{
     try{
-        const packages = Tour.find({});
+        const packages = await Tour.find({});
 
         if(!packages){
             return res.status(400).json({
@@ -33,7 +33,7 @@ exports.getPackegesByID = async(req,res)=>{
     try{
         const {id} = req.params;
 
-        const tour = Tour.findById({_id:id});
+        const tour = await Tour.findById({_id:id});
 
         return res.status(200).json({
             success:true,
@@ -53,11 +53,13 @@ exports.getPackegesByID = async(req,res)=>{
 exports.submitPackage = async(req,res)=>{
     try{
 
+        console.log("here")
+
         const {id, Name, email, phone, NoOfTravellers, specialRequest} = req.body;
 
         const tour = await Tour.findById(id);  
         if (!tour) {
-            return res.status(404).json({
+            return res.status(400).json({
                 success: false,
                 message: "Tour not found"
             });

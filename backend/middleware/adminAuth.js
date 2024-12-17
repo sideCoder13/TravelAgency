@@ -3,11 +3,11 @@ require('dotenv').config();
 
 exports.adminLogin = async (req,res)=>{
     try{
-        const {user, password} = req.body;
+        const {username, password} = req.body;
 
-        if(user==="admin" && password=="admin123"){
+        if(username==="admin" && password=="admin123"){
             const payload = { username: "admin"};
-            const options = { expiresIn: '1h' };
+            const options = { expiresIn: '10h' };
 
             const token = jwt.sign(payload, process.env.JWT_SECRET, options);
             // req.token = token;
@@ -21,7 +21,7 @@ exports.adminLogin = async (req,res)=>{
             return res.cookie("token", token, option).status(200).json({
                 success:true,
                 token,
-                user,
+                username,
                 message:"Successfully logged in"
             })
 
@@ -45,16 +45,17 @@ exports.adminLogin = async (req,res)=>{
 
 exports.verifyToken = async (req,res,next)=>{
     try{
-        // console.log(req)
+        
+        // console.log(req.body)
         // const token = null;
-        const token = req.cookie?.token || req.body?.token || req.header("Authorisation")?.replace("Bearer ","")
+        const token = req.body?.token || req.body?.data.token || req.header("Authorisation")?.replace("Bearer ","")
         if(!token){
             return res.status(401).json({
                 success:false,
                 message:"Token is missing!"
             })
         }
-
+        
         try{
             //decode token
             const decode = jwt.decode(token,process.env.JWT_SECRET);
@@ -62,6 +63,7 @@ exports.verifyToken = async (req,res,next)=>{
             req.user = decode
         }
         catch(err){
+            console.log(err);
             return res.status(401).json({
                 success:false,
                 message:"Error in decoding JWT token (auth middleware)"

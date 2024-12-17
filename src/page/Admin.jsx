@@ -1,66 +1,114 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FiEdit2, FiTrash2, FiPackage, FiUsers, FiDollarSign, FiCalendar } from "react-icons/fi";
+import axios from "axios";
+import { toast } from "react-toastify";
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
-  const [packages, setPackages] = useState([
-    {
-      id: 1,
-      name: "Paradise Island Getaway",
-      description: "Experience luxury on a pristine island",
-      price: 1299,
-      duration: "7 days",
-      image: "https://images.unsplash.com/photo-1506929562872-bb421503ef21"
-    },
-    {
-      id: 2,
-      name: "Mountain Adventure Trek",
-      description: "Challenging trails and breathtaking views",
-      price: 899,
-      duration: "5 days",
-      image: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b"
-    }
-  ]);
+  const [packages, setPackages] = useState([]);
 
-  const [bookings, setBookings] = useState([
-    {
-      id: 1,
-      customerName: "John Doe",
-      packageName: "Paradise Island Getaway",
-      bookingDate: "2024-02-15",
-      status: "Confirmed"
-    },
-    {
-      id: 2,
-      customerName: "Jane Smith",
-      packageName: "Mountain Adventure Trek",
-      bookingDate: "2024-02-20",
-      status: "Pending"
-    }
-  ]);
+  const [bookings, setBookings] = useState([]);
 
   const [editPackage, setEditPackage] = useState(null);
+
+
   const [formData, setFormData] = useState({
-    name: "",
+    title: "",
     description: "",
-    price: "",
-    duration: "",
-    image: ""
+    price: 0,
+    image: "", // Corrected this to "image" instead of "images"
+    availableDates: []
   });
 
-  const handleInputChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const getUsers = `${process.env.REACT_APP_BACKEND_URL}/admin/users`
+  const getAllTours = `${process.env.REACT_APP_BACKEND_URL}/packages`
+  const postTours = `${process.env.REACT_APP_BACKEND_URL}/admin/packages`
+   let updateTours = `${process.env.REACT_APP_BACKEND_URL}/admin/packages`
+  const deleteTours = `${process.env.REACT_APP_BACKEND_URL}/admin/packages`
+
+  useEffect(()=>{
+
+    const fetchData = async()=>{
+      try{
+        //getUsers, getAllTours
+        const [res1, res2] = await axios.all([
+          axios.get(getUsers),
+          axios.get(getAllTours)
+        ])
+
+        setBookings(res1.data.data)
+        setPackages(res2.data.data)
+
+        console.log(res1.data.data);
+        console.log(res2.data.data)
+
+      }catch(err){
+        console.log(err);
+      }
+    }
+
+    fetchData()
+    
+  },[])
+
+  const handleDateChange = (e) => {
+    console.log(formData)
+    const date = e.target.value;
+    if (date && !formData.availableDates.includes(date)) {
+      setFormData((prev) => ({
+        ...prev,
+        availableDates: [...prev.availableDates, new Date(date).toISOString()]
+      }));
+    }
   };
 
-  const handleSubmit = (e) => {
+  const handleRemoveDate = (index) => {
+    const updatedDates = formData.availableDates.filter((_, i) => i !== index);
+    setFormData((prev) => ({
+      ...prev,
+      availableDates: updatedDates
+    }));
+  };
+
+  const handleInputChange = (e) => {
+    console.log("here")
+    // setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]:value
+    })
+  };
+
+  const handleSubmit = async(e) => {
     e.preventDefault();
     if (editPackage) {
       setPackages(packages.map(pkg => pkg.id === editPackage.id ? { ...formData, id: editPackage.id } : pkg));
+
+      let image=null;
+      const token = localStorage.getItem("token")
+      if(formData.image)  image = formData.image
+      // // console.log(image);
+      // console.log("Token- ",token);
+      // console.log("Edit Pakage- ",editPackage)
+      // console.log("Form Data- ",formData)
+      const res = await axios.put(updateTours+=`/${editPackage._id}`,{data:{formData,image,token}})
+      console.log(res)
       setEditPackage(null);
+      toast.success("Submitted Successfully")
     } else {
+      console.log("Post package- ",formData);
+      // New package(post package)
+      const token = localStorage.getItem("token"); 
+      const data = {
+        formData,  
+        token   
+      };
+      const response = await axios.post(postTours,data)
+      console.log(response);
       setPackages([...packages, { ...formData, id: packages.length + 1 }]);
-    }
-    setFormData({ name: "", description: "", price: "", duration: "", image: "" });
+    } 
+    setFormData({ name: "", description: "", price: "", availableDates: [], image: "" });
   };
 
   const handleEdit = (pkg) => {
@@ -69,8 +117,12 @@ const AdminDashboard = () => {
     setActiveTab("add");
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async(id) => {
     setPackages(packages.filter(pkg => pkg.id !== id));
+    console.log(id);
+    const token = localStorage.getItem("token")
+    const ans = await axios.delete(deleteTours+`/${id}`,{ data:{token}});
+    console.log(ans);
   };
 
   const DashboardOverview = () => (
@@ -98,7 +150,7 @@ const AdminDashboard = () => {
           <FiDollarSign className="text-yellow-500 text-3xl mr-4" />
           <div>
             <p className="text-gray-500">Revenue</p>
-            <h3 className="text-2xl font-bold">$
+            <h3 className="text-2xl font-bold">Rs
               {packages.reduce((total, pkg) => total + pkg.price, 0)}
             </h3>
           </div>
@@ -128,11 +180,11 @@ const AdminDashboard = () => {
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
-          {packages.map((pkg) => (
+          {packages.map((pkg,key) => (
             <tr key={pkg.id}>
-              <td className="px-6 py-4 whitespace-nowrap">{pkg.name}</td>
+              <td className="px-6 py-4 whitespace-nowrap">{pkg.title}</td>
               <td className="px-6 py-4">{pkg.description}</td>
-              <td className="px-6 py-4 whitespace-nowrap">${pkg.price}</td>
+              <td className="px-6 py-4 whitespace-nowrap">Rs {pkg.price}</td>
               <td className="px-6 py-4 whitespace-nowrap">
                 <button
                   onClick={() => handleEdit(pkg)}
@@ -141,7 +193,7 @@ const AdminDashboard = () => {
                   <FiEdit2 />
                 </button>
                 <button
-                  onClick={() => handleDelete(pkg.id)}
+                  onClick={() => handleDelete(pkg._id)}
                   className="text-red-600 hover:text-red-900"
                 >
                   <FiTrash2 />
@@ -154,62 +206,84 @@ const AdminDashboard = () => {
     </div>
   );
 
+
   const PackageForm = () => (
     <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6">
       <div className="mb-4">
-        <label className="block text-gray-700 text-sm font-bold mb-2">Package Name</label>
+        <label htmlFor="title" className="block font-bold text-sm text-gray-700 mb-1">
+          Title
+        </label>
         <input
           type="text"
-          name="name"
-          value={formData.name}
+          id="title"
+          name="title"
+          value={formData.title} // Bind to formData.title
           onChange={handleInputChange}
-          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          required
+          className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition duration-200 pl-10"
         />
       </div>
+  
       <div className="mb-4">
         <label className="block text-gray-700 text-sm font-bold mb-2">Description</label>
         <textarea
+          type="text"
+          id="description"
           name="description"
-          value={formData.description}
+          value={formData.description} // Bind to formData.description
           onChange={handleInputChange}
-          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+          className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition duration-200 pl-10"
           required
         />
       </div>
+  
       <div className="mb-4">
         <label className="block text-gray-700 text-sm font-bold mb-2">Price</label>
         <input
           type="number"
           name="price"
-          value={formData.price}
+          value={formData.price} // Bind to formData.price
           onChange={handleInputChange}
-          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+          className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition duration-200 pl-10"
           required
         />
       </div>
-      <div className="mb-4">
-        <label className="block text-gray-700 text-sm font-bold mb-2">Duration</label>
-        <input
-          type="text"
-          name="duration"
-          value={formData.duration}
-          onChange={handleInputChange}
-          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          required
-        />
-      </div>
+  
       <div className="mb-4">
         <label className="block text-gray-700 text-sm font-bold mb-2">Image URL</label>
         <input
           type="text"
           name="image"
-          value={formData.image}
+          value={formData.image} // Bind to formData.image
           onChange={handleInputChange}
-          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+          className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition duration-200 pl-10"
           required
         />
       </div>
+
+      {/* Available Dates */}
+      <label>
+        <div className="block text-gray-700 text-sm font-bold mb-2">Available Dates:</div>
+        <input
+          type="date"
+          name="availableDate"
+          onChange={handleDateChange}
+          className="w-[20%] mb-5 px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition duration-200 pl-10"
+        />
+      </label>
+
+  {/* Display added dates */}
+    <ul>
+      {formData.availableDates.map((date, index) => (
+        <li key={index}>
+          {new Date(date).toLocaleDateString()}{" "}
+          <button className="p-3" type="button" onClick={() => handleRemoveDate(index)}>
+            Remove
+          </button>
+        </li>
+      ))}
+    </ul>
+
+  
       <button
         type="submit"
         className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
@@ -218,6 +292,8 @@ const AdminDashboard = () => {
       </button>
     </form>
   );
+  
+
 
   const BookingsOverview = () => (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
@@ -226,27 +302,19 @@ const AdminDashboard = () => {
           <tr>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer Name</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Package Name</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Booking Date</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contact</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
           {bookings.map((booking) => (
             <tr key={booking.id}>
-              <td className="px-6 py-4 whitespace-nowrap">{booking.customerName}</td>
-              <td className="px-6 py-4 whitespace-nowrap">{booking.packageName}</td>
-              <td className="px-6 py-4 whitespace-nowrap">{booking.bookingDate}</td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <span
-                  className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                    booking.status === "Confirmed"
-                      ? "bg-green-100 text-green-800"
-                      : "bg-yellow-100 text-yellow-800"
-                  }`}
-                >
-                  {booking.status}
-                </span>
-              </td>
+              <td className="px-6 py-4 whitespace-nowrap">{booking.Name}</td>
+              <td className="px-6 py-4 whitespace-nowrap">{booking?.tours[0]?.title}</td>
+              <td className="px-6 py-4 whitespace-nowrap">{booking?.tours[0]?.price}</td>
+              <td className="px-6 py-4 whitespace-nowrap">{booking.phone}</td>
+              <td className="px-6 py-4 whitespace-nowrap">{booking.email}</td>
             </tr>
           ))}
         </tbody>
@@ -255,9 +323,9 @@ const AdminDashboard = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="pt-24 min-h-screen bg-gray-100">
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-8">Tour Package Management Dashboard</h1>
+        <h1 className="text-center text-3xl font-bold text-gray-800 mb-8">YatraNow Admin Dashboard</h1>
         
         <div className="mb-6">
           <div className="border-b border-gray-200">
