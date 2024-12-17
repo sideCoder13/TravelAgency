@@ -19,7 +19,7 @@ app.use(cors({
     origin: 'https://travelagency-1-0hz5.onrender.com' // Allow only this origin
 }));
 app.use(morgan('dev'))
-app.use("/api/v1",routes)
+app.use("/",routes)
 
 
 
