@@ -16,7 +16,7 @@ app.use(express.json())
 // app.use(cors()) // Enable CORS for all routes and origins
 // CORS should be mentioned first among middleware
 app.use(cors({
-    origin: 'http://localhost:3000' // Allow only this origin
+    origin: 'https://travelagency-1-0hz5.onrender.com' // Allow only this origin
 }));
 app.use(morgan('dev'))
 app.use("/api/v1",routes)
