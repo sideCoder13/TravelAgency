@@ -34,6 +34,7 @@ And you are reday to use the application!
    10. JWT Tokens for Admin authentication
   
    Admin Credentials-
+   
    Username- admin
    Password- admin123
   
